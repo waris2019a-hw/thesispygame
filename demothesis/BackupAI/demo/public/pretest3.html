@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แบบทดสอบ Python: print()</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
+        body { font-family: 'Kanit', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div id="app" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl">
+        <!-- Login Section -->
+        <div id="login-section">
+            <h1 class="text-2xl font-bold text-center mb-6 text-blue-600">แบบทดสอบก่อนเรียน เรื่อง print()</h1>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">รหัสนักเรียน</label>
+                    <input type="text" id="student-id" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="เช่น 65001">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">ชื่อ-นามสกุล</label>
+                    <input type="text" id="student-name" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="สมชาย ใจดี">
+                </div>
+                <button onclick="startQuiz()" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-200 font-semibold">เริ่มทำแบบทดสอบ</button>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div id="quiz-section" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <span id="progress" class="text-sm text-gray-500">ข้อที่ 1/20</span>
+                <span id="timer" class="text-sm font-mono bg-gray-200 px-2 py-1 rounded">00:00</span>
+            </div>
+            <div id="question-container">
+                <p id="question-text" class="text-lg font-semibold mb-4"></p>
+                <div id="options" class="space-y-3"></div>
+            </div>
+            <div class="mt-8 flex justify-end">
+                <button id="next-btn" onclick="nextQuestion()" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition hidden">ถัดไป</button>
+            </div>
+        </div>
+
+        <!-- Result Section -->
+        <div id="result-section" class="hidden text-center">
+            <h2 class="text-3xl font-bold mb-4 text-green-600">สรุปผลคะแนน</h2>
+            <div class="bg-gray-50 p-6 rounded-lg mb-6">
+                <p id="res-name" class="text-lg mb-2"></p>
+                <p id="res-id" class="text-gray-600 mb-4"></p>
+                <div class="text-5xl font-bold text-blue-600 mb-2" id="res-score">0 / 20</div>
+                <p id="res-percent" class="text-gray-500"></p>
+            </div>
+            <button onclick="location.reload()" class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 transition">ทำอีกครั้ง</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            { q: "คำสั่งใดใช้สำหรับแสดงผลทางหน้าจอใน Python?", o: ["print()", "echo()", "cout()", "printf()"], a: 0 },
+            { q: "หากต้องการพิมพ์ข้อความ 'Hello' ต้องเขียนอย่างไร?", o: ["print(Hello)", "print('Hello')", "print\"Hello\"", "print(Hello, string)"], a: 1 },
+            { q: "ผลลัพธ์ของ print(10 + 5) คืออะไร?", o: ["10 + 5", "105", "15", "Error"], a: 2 },
+            { q: "สัญลักษณ์ใดใช้สำหรับระบุว่าเป็นข้อความ (String)?", o: ["( )", "[ ]", "{ }", "' ' หรือ \" \"" ], a: 3 },
+            { q: "print('Hello' + 'World') จะแสดงผลอย่างไร?", o: ["Hello World", "HelloWorld", "Hello+World", "Error"], a: 1 },
+            { q: "คำสั่ง print('Hello', 'Python') โดยใช้เครื่องหมาย comma จะเว้นวรรคหรือไม่?", o: ["ไม่เว้นวรรค", "เว้นวรรค 1 ช่อง", "ขึ้นบรรทัดใหม่", "เกิด Error"], a: 1 },
+            { q: "คำสั่ง print('A\\nB') จะแสดงผลอย่างไร?", o: ["A\\nB", "A B", "A (ขึ้นบรรทัดใหม่) B", "AB"], a: 2 },
+            { q: "\\n หมายถึงอะไรใน Python String?", o: ["เว้นวรรค", "ขึ้นบรรทัดใหม่", "ย่อหน้า (Tab)", "ลบตัวอักษร"], a: 1 },
+            { q: "\\t หมายถึงอะไรใน Python String?", o: ["ขึ้นบรรทัดใหม่", "ย่อหน้า (Tab)", "จบประโยค", "เว้นวรรค 1 ช่อง"], a: 1 },
+            { q: "ผลลัพธ์ของ print('Result:\\t100') คืออะไร?", o: ["Result:100", "Result: (Tab) 100", "Result: (ขึ้นบรรทัดใหม่) 100", "Error"], a: 1 },
+            { q: "หากต้องการพิมพ์ตัวเลข 20.5 ต้องเขียนอย่างไร?", o: ["print('20.5')", "print(20.5)", "ทั้งสองข้อถูก", "ไม่มีข้อใดถูก"], a: 2 },
+            { q: "ข้อใดคือการพิมพ์ String และ Number ร่วมกันที่ถูกต้อง?", o: ["print('Score: ' + 10)", "print('Score: ', 10)", "print('Score: ' 10)", "print('Score: ' + '10' + '10')"], a: 1 },
+            { q: "ผลลัพธ์ของ print('5' + '5') คืออะไร?", o: ["10", "55", "Error", "None"], a: 1 },
+            { q: "คำสั่ง print('Hello', end='!') จะทำให้ผลลัพธ์เป็นอย่างไร?", o: ["Hello!", "Hello (ขึ้นบรรทัดใหม่) !", "Hello และไม่ขึ้นบรรทัดใหม่ในข้อถัดไป", "Error"], a: 2 },
+            { q: "คำสั่ง print('A', 'B', sep='-') จะแสดงผลอย่างไร?", o: ["A B", "A-B", "AB", "A,B"], a: 1 },
+            { q: "หากต้องการพิมพ์เครื่องหมาย Double Quote (\") ในข้อความ ต้องใช้เครื่องหมายใดนำหน้า?", o: ["/ ", "\\", "#", "@"], a: 1 },
+            { q: "print(type('123')) จะได้ผลลัพธ์เป็นอะไร?", o: ["<class 'int'>", "<class 'str'>", "<class 'float'>", "Error"], a: 1 },
+            { q: "print(type(123)) จะได้ผลลัพธ์เป็นอะไร?", o: ["<class 'int'>", "<class 'str'>", "<class 'float'>", "Error"], a: 0 },
+            { q: "ข้อใดคือการใช้ f-string ในการพิมพ์ตัวแปร x = 10?", o: ["print(f'Value is {x}')", "print('Value is {x}')", "print('Value is ' + x)", "print(f'Value is x')"], a: 0 },
+            { q: "คำสั่ง print('Hello' * 3) จะแสดงผลอย่างไร?", o: ["HelloHelloHello", "Hello 3 times", "Error", "HelloHello Hello"], a: 0 }
+        ];
+
+        let currentIdx = 0;
+        let score = 0;
+        let startTime;
+
+        function startQuiz() {
+            const id = document.getElementById('student-id').value;
+            const name = document.getElementById('student-name').value;
+            if (!id || !name) return alert('กรุณากรอกชื่อและรหัสให้ครบถ้วน');
+            
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('quiz-section').classList.remove('hidden');
+            startTime = new Date();
+            updateTimer();
+            setInterval(updateTimer, 1000);
+            showQuestion();
+        }
+
+        function updateTimer() {
+            const now = new Date();
+            const diff = Math.floor((now - startTime) / 1000);
+            const m = Math.floor(diff / 60).toString().padStart(2, '0');
+            const s = (diff % 60).toString().padStart(2, '0');
+            document.getElementById('timer').innerText = `${m}:${s}`;
+        }
+
+        function showQuestion() {
+            const q = questions[currentIdx];
+            document.getElementById('progress').innerText = `ข้อที่ ${currentIdx + 1}/20`;
+            document.getElementById('question-text').innerText = q.q;
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            
+            q.o.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left px-4 py-3 border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition duration-150';
+                btn.innerText = opt;
+                btn.onclick = () => selectOption(i);
+                optionsDiv.appendChild(btn);
+            });
+        }
+
+        function selectOption(i) {
+            const buttons = document.getElementById('options').querySelectorAll('button');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            if (i === questions[currentIdx].a) {
+                buttons[i].classList.add('bg-green-100', 'border-green-500');
+                score++;
+            } else {
+                buttons[i].classList.add('bg-red-100', 'border-red-500');
+                buttons[questions[currentIdx].a].classList.add('bg-green-100', 'border-green-500');
+            }
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentIdx++;
+            if (currentIdx < questions.length) {
+                document.getElementById('next-btn').classList.add('hidden');
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quiz-section').classList.add('hidden');
+            document.getElementById('result-section').classList.remove('hidden');
+            document.getElementById('res-name').innerText = `นักเรียน: ${document.getElementById('student-name').value}`;
+            document.getElementById('res-id').innerText = `รหัส: ${document.getElementById('student-id').value}`;
+            document.getElementById('res-score').innerText = `${score} / 20`;
+            document.getElementById('res-percent').innerText = `คิดเป็น ${(score/20*100).toFixed(2)}%`;
+        }
+    </script>
+</body>
+</html>

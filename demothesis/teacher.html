@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - Python Fantasy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBkRS0JyVqO8l4scTBAnB93D3B7BeAAE9w",
+            authDomain: "scorestudent-f18c5.firebaseapp.com",
+            databaseURL: "https://scorestudent-f18c5-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "scorestudent-f18c5",
+            storageBucket: "scorestudent-f18c5.firebasestorage.app",
+            messagingSenderId: "55893928684",
+            appId: "1:55893928684:web:fcee9b42d6b8b87df853c9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const appId = 'python-fantasy-v1';
+
+        async function fetchStudents() {
+            const studentsList = document.getElementById('students-list');
+            studentsList.innerHTML = '<p class="text-center text-slate-400">กำลังโหลดข้อมูลนักเรียน...</p>';
+            
+            try {
+                const knightsCol = collection(db, 'artifacts', appId, 'public', 'data', 'knights');
+                const q = query(knightsCol, orderBy('score', 'desc'));
+                const querySnapshot = await getDocs(q);
+                studentsList.innerHTML = '';
+
+                if (querySnapshot.empty) {
+                    studentsList.innerHTML = '<p class="text-center text-slate-400 py-10">ไม่พบข้อมูลนักเรียน</p>';
+                    return;
+                }
+
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const id = docSnap.id;
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-slate-100 hover:bg-slate-50 transition-colors';
+                    row.innerHTML = `
+                        <td class="px-6 py-4 font-bold text-slate-700">${data.name || 'ไม่ระบุชื่อ'}</td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-sm font-bold">${data.score || 0} XP</span>
+                        </td>
+                        <td class="px-6 py-4 text-right space-x-2">
+                            <button onclick="editScore('${id}', ${data.score || 0})" class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteStudent('${id}')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    studentsList.appendChild(row);
+                });
+            } catch (e) {
+                console.error(e);
+                studentsList.innerHTML = '<p class="text-center text-red-500 py-10">เกิดข้อผิดพลาดในการดึงข้อมูล</p>';
+            }
+        }
+
+        window.editScore = async (id, currentScore) => {
+            const newScore = prompt('ระบุคะแนนใหม่ (XP):', currentScore);
+            if (newScore !== null && !isNaN(newScore)) {
+                const knightRef = doc(db, 'artifacts', appId, 'public', 'data', 'knights', id);
+                
+                let rank = "Novice";
+                const score = parseInt(newScore);
+                if (score >= 3000) rank = "Knight Legend 👑";
+                else if (score >= 2000) rank = "Grand Knight 🔮";
+                else if (score >= 1000) rank = "Knight 🧙";
+                else if (score >= 500) rank = "Squire 🛡️";
+
+                await updateDoc(knightRef, {
+                    score: score,
+                    rank: rank
+                });
+                fetchStudents();
+            }
+        };
+
+        window.deleteStudent = async (id) => {
+            if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบนักเรียนคนนี้?')) {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'knights', id));
+                fetchStudents();
+            }
+        };
+
+        window.addStudent = async () => {
+            const name = document.getElementById('new-student-name').value;
+            const score = document.getElementById('new-student-score').value;
+            if (!name) return alert('กรุณากรอกชื่อ');
+            
+            const knightsCol = collection(db, 'artifacts', appId, 'public', 'data', 'knights');
+            const newKnightRef = doc(knightsCol);
+            
+            let rank = "Novice";
+            const s = parseInt(score) || 0;
+            if (s >= 3000) rank = "Knight Legend 👑";
+            else if (s >= 2000) rank = "Grand Knight 🔮";
+            else if (s >= 1000) rank = "Knight 🧙";
+            else if (s >= 500) rank = "Squire 🛡️";
+
+            await setDoc(newKnightRef, {
+                name: name,
+                score: s,
+                rank: rank,
+                avatar: '🛡️',
+                createdAt: new Date()
+            });
+            
+            document.getElementById('new-student-name').value = '';
+            document.getElementById('new-student-score').value = '';
+            fetchStudents();
+        };
+
+        window.onload = fetchStudents;
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
+        body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-black text-slate-800 uppercase italic">Teacher Dashboard</h1>
+                <p class="text-slate-500">จัดการคะแนนและรายชื่ออัศวินแห่ง Python Fantasy</p>
+            </div>
+            <div class="flex gap-2">
+                <input type="text" id="new-student-name" placeholder="ชื่อนักเรียน" class="border-2 border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+                <input type="number" id="new-student-score" placeholder="XP" class="w-20 border-2 border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+                <button onclick="addStudent()" class="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-indigo-700 transition-all active:scale-95">
+                    <i class="fas fa-plus mr-2"></i>เพิ่ม
+                </button>
+            </div>
+        </header>
+
+        <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-4 text-xs font-black uppercase text-slate-400 tracking-widest">ชื่ออัศวิน</th>
+                        <th class="px-6 py-4 text-center text-xs font-black uppercase text-slate-400 tracking-widest">คะแนน (XP)</th>
+                        <th class="px-6 py-4 text-right text-xs font-black uppercase text-slate-400 tracking-widest">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody id="students-list">
+                    <!-- Data will be injected here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

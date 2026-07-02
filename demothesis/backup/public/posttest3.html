@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แบบทดสอบหลังเรียน Python: print()</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
+        body { font-family: 'Kanit', sans-serif; }
+    </style>
+</head>
+<body class="bg-indigo-100 min-h-screen flex items-center justify-center p-4">
+    <div id="app" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl">
+        <!-- Login Section -->
+        <div id="login-section">
+            <h1 class="text-2xl font-bold text-center mb-6 text-indigo-600">แบบทดสอบหลังเรียน เรื่อง print()</h1>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">รหัสนักเรียน</label>
+                    <input type="text" id="student-id" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 outline-none" placeholder="เช่น 65001">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">ชื่อ-นามสกุล</label>
+                    <input type="text" id="student-name" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 outline-none" placeholder="สมชาย ใจดี">
+                </div>
+                <button onclick="startQuiz()" class="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition duration-200 font-semibold">เริ่มทำแบบทดสอบ</button>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div id="quiz-section" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <span id="progress" class="text-sm text-gray-500">ข้อที่ 1/20</span>
+                <span id="timer" class="text-sm font-mono bg-gray-200 px-2 py-1 rounded">00:00</span>
+            </div>
+            <div id="question-container">
+                <p id="question-text" class="text-lg font-semibold mb-4"></p>
+                <div id="options" class="space-y-3"></div>
+            </div>
+            <div class="mt-8 flex justify-end">
+                <button id="next-btn" onclick="nextQuestion()" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition hidden">ถัดไป</button>
+            </div>
+        </div>
+
+        <!-- Result Section -->
+        <div id="result-section" class="hidden text-center">
+            <h2 class="text-3xl font-bold mb-4 text-indigo-600">สรุปผลคะแนนหลังเรียน</h2>
+            <div class="bg-indigo-50 p-6 rounded-lg mb-6">
+                <p id="res-name" class="text-lg mb-2"></p>
+                <p id="res-id" class="text-gray-600 mb-4"></p>
+                <div class="text-5xl font-bold text-indigo-600 mb-2" id="res-score">0 / 20</div>
+                <p id="res-percent" class="text-gray-500"></p>
+            </div>
+            <button onclick="location.reload()" class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 transition">ทำอีกครั้ง</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            { q: "ข้อใดคือการใช้ print() เพื่อแสดงคำว่า 'Hello Python' ที่ถูกต้องที่สุด?", o: ["print(Hello Python)", "print('Hello Python')", "print(\"Hello Python)\", "print 'Hello Python'"], a: 1 },
+            { q: "หากต้องการแสดงผล 'A' และ 'B' โดยให้มีเครื่องหมาย '-' คั่นกลาง (เช่น A-B) ต้องใช้พารามิเตอร์ใด?", o: ["end='-'", "sep='-'", "div='-'", "split='-'"], a: 1 },
+            { q: "คำสั่ง print('10 + 20') จะแสดงผลอย่างไร?", o: ["30", "10 + 20", "Error", "None"], a: 1 },
+            { q: "ข้อใดให้ผลลัพธ์เหมือนกับ print('Hello\\nWorld')?", o: ["พิมพ์ Hello แล้วเว้นวรรค World", "พิมพ์ Hello แล้วขึ้นบรรทัดใหม่เป็น World", "พิมพ์ HelloWorld ติดกัน", "พิมพ์ Hello แล้วย่อหน้า World"], a: 1 },
+            { q: "หากต้องการเว้นระยะย่อหน้าในคำสั่ง print ต้องใช้สัญลักษณ์ใด?", o: ["\\n", "\\t", "\\s", "\\b"], a: 1 },
+            { q: "ผลลัพธ์ของ print('Python' * 2) คืออะไร?", o: ["Python Python", "Python2", "PythonPython", "Error"], a: 2 },
+            { q: "คำสั่งใดสามารถแสดงผลตัวแปร x ร่วมกับข้อความได้ถูกต้อง (กำหนด x = 5)?", o: ["print('Value = ' + x)", "print('Value = ', x)", "print('Value = {x}')", "print('Value = ' . x)"], a: 1 },
+            { q: "f-string มีรูปแบบการเขียนที่ถูกต้องอย่างไร?", o: ["print(f'Value is {x}')", "print('Value is {x}')", "print(f'Value is x')", "print(f'Value is' + {x})"], a: 0 },
+            { q: "หากต้องการพิมพ์เครื่องหมาย ' ในข้อความ (เช่น 'Hello') จะต้องครอบด้วยเครื่องหมายใดเพื่อให้แสดงผลได้?", o: ["( )", "[ ]", "\" \"", "{ }"], a: 2 },
+            { q: "คำสั่ง print('A', 'B', end='') หมายถึงอะไร?", o: ["ไม่ต้องพิมพ์ A และ B", "พิมพ์ A B และให้ขึ้นบรรทัดใหม่", "พิมพ์ A B โดยไม่ขึ้นบรรทัดใหม่ในฟังก์ชันถัดไป", "เกิด Error"], a: 2 },
+            { q: "ผลลัพธ์ของ print(5 + 5.0) คืออะไร?", o: ["10", "10.0", "55.0", "Error"], a: 1 },
+            { q: "คำสั่ง print('Hello', 'World', sep=' ') จะได้ผลลัพธ์เป็นอย่างไร?", o: ["HelloWorld", "Hello World", "Hello-World", "Hello\nWorld"], a: 1 },
+            { q: "ข้อใดคือการพิมพ์ String 3 ชุดต่อกันโดยใช้เครื่องหมาย + ?", o: ["print('A' + 'B' + 'C')", "print('A', 'B', 'C')", "print('A' 'B' 'C')", "ถูกทุกข้อ"], a: 0 },
+            { q: "หากต้องการพิมพ์ตัวอักษร \n ออกมาตรงๆ ให้หน้าจอแสดง \n ต้องเขียนอย่างไร?", o: ["print('\\\\n')", "print('\\n')", "print('n')", "print('/n')"], a: 1 },
+            { q: "คำสั่ง print('3' + '4') จะได้ผลลัพธ์เป็นอะไร?", o: ["7", "34", "Error", "None"], a: 1 },
+            { q: "คำสั่งใดใช้ตรวจสอบชนิดข้อมูลของสิ่งที่ส่งเข้าไปใน print()?", o: ["check()", "type()", "kind()", "class()"], a: 1 },
+            { q: "ถ้าใช้ print('Hello', 'World') โดยไม่ระบุ sep จะมีผลลัพธ์เป็นอย่างไร?", o: ["HelloWorld", "Hello World", "Hello,World", "Hello\nWorld"], a: 1 },
+            { q: "print('10' * 3) จะแสดงผลอย่างไร?", o: ["30", "101010", "10 10 10", "Error"], a: 1 },
+            { q: "ข้อใดกล่าวถูกต้องเกี่ยวกับ print() ใน Python 3?", o: ["ไม่ต้องใส่เล็บ", "ต้องใส่เล็บเสมอ", "ใช้ได้เฉพาะตัวเลข", "ใช้ได้เฉพาะข้อความ"], a: 1 },
+            { q: "หากต้องการพิมพ์ข้อความหลายบรรทัดในชุดเดียวโดยใช้เครื่องหมายคำพูด ควรใช้แบบใด?", o: ["' '", "\" \"", "''' '''", " none of these"], a: 2 }
+        ];
+
+        let currentIdx = 0;
+        let score = 0;
+        let startTime;
+
+        function startQuiz() {
+            const id = document.getElementById('student-id').value;
+            const name = document.getElementById('student-name').value;
+            if (!id || !name) return alert('กรุณากรอกชื่อและรหัสให้ครบถ้วน');
+            
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('quiz-section').classList.remove('hidden');
+            startTime = new Date();
+            updateTimer();
+            setInterval(updateTimer, 1000);
+            showQuestion();
+        }
+
+        function updateTimer() {
+            const now = new Date();
+            const diff = Math.floor((now - startTime) / 1000);
+            const m = Math.floor(diff / 60).toString().padStart(2, '0');
+            const s = (diff % 60).toString().padStart(2, '0');
+            document.getElementById('timer').innerText = `${m}:${s}`;
+        }
+
+        function showQuestion() {
+            const q = questions[currentIdx];
+            document.getElementById('progress').innerText = `ข้อที่ ${currentIdx + 1}/20`;
+            document.getElementById('question-text').innerText = q.q;
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            
+            q.o.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left px-4 py-3 border-2 border-gray-200 rounded-lg hover:border-indigo-400 hover:bg-indigo-50 transition duration-150';
+                btn.innerText = opt;
+                btn.onclick = () => selectOption(i);
+                optionsDiv.appendChild(btn);
+            });
+        }
+
+        function selectOption(i) {
+            const buttons = document.getElementById('options').querySelectorAll('button');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            if (i === questions[currentIdx].a) {
+                buttons[i].classList.add('bg-green-100', 'border-green-500');
+                score++;
+            } else {
+                buttons[i].classList.add('bg-red-100', 'border-red-500');
+                buttons[questions[currentIdx].a].classList.add('bg-green-100', 'border-green-500');
+            }
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentIdx++;
+            if (currentIdx < questions.length) {
+                document.getElementById('next-btn').classList.add('hidden');
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quiz-section').classList.add('hidden');
+            document.getElementById('result-section').classList.remove('hidden');
+            document.getElementById('res-name').innerText = `นักเรียน: ${document.getElementById('student-name').value}`;
+            document.getElementById('res-id').innerText = `รหัส: ${document.getElementById('student-id').value}`;
+            document.getElementById('res-score').innerText = `${score} / 20`;
+            document.getElementById('res-percent').innerText = `คิดเป็น ${(score/20*100).toFixed(2)}%`;
+        }
+    </script>
+</body>
+</html>
