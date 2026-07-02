@@ -1,0 +1,17 @@
+{
+    "id": 5,
+    "tag": "บทที่ 05",
+    "title": "ตัวดำเนินการ (Operator)",
+    "desc": "การใช้เครื่องหมายคำนวณทางคณิตศาสตร์",
+    "itemName": "ลูกคิดยุทธการ",
+    "itemIcon": "🧮",
+    "docLink": "https://drive.google.com/file/d/1gEI1DvGogcbGdntIFOMKnh8tPD9WfjeW/view?usp=sharing",
+    "video": "https://www.youtube.com/embed/mpphF5UaG1M",
+    "text": "<p>จัดการค่าตัวเลขด้วยเครื่องหมายคณิตศาสตร์ เช่น บวก ลบ คูณ หาร และยังรวมถึงเครื่องหมายเปรียบเทียบ</p>",
+    "initCode": "sword_atk = 50\nshield_def = 30\ntotal_power = sword_atk + shield_def\nprint(total_power)",
+    "quizzes": [
+        {"q": "การเขียนโค้ดเพื่อหาค่า 5 ยกกำลัง 3 ใน Python ข้อใดถูกต้อง?", "options": ["5 ^ 3", "5 * 3", "5 ** 3", "5 & 3"], "ans": 2},
+        {"q": "เครื่องหมายใดใช้ในการหาเศษจากการหาร?", "options": ["/", "//", "%", "mod"], "ans": 2},
+        {"q": "ผลลัพธ์ของ 2 + 3 * 4 ใน Python คือเท่าใด?", "options": ["20", "14", "9", "11"], "ans": 1}
+    ]
+}

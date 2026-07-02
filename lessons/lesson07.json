@@ -1,0 +1,17 @@
+{
+    "id": 7,
+    "tag": "บทที่ 07",
+    "title": "การวนซ้ำ (Loop)",
+    "desc": "การทำงานซ้ำด้วยคำสั่ง For และ While",
+    "itemName": "นาฬิกาทรายนิรันดร์",
+    "itemIcon": "⏳",
+    "docLink": "https://drive.google.com/file/d/1uk298rV5Z53RgQYIMkcjvXszfsrIgJcl/view?usp=sharing",
+    "video": "https://www.youtube.com/embed/nXUBzYNbTEk",
+    "text": "<p>การวนซ้ำคือการทำงานซ้ำๆ ตามจำนวนรอบที่กำหนด ใช้ For สำหรับจำนวนรอบที่รู้แน่นอน และ While สำหรับเงื่อนไข</p>",
+    "initCode": "for i in range(1, 6):\n    print('เหวี่ยงดาบครั้งที่:', i)",
+    "quizzes": [
+        {"q": "range(10) จะวนซ้ำทั้งหมดกี่รอบ?", "options": ["9 รอบ", "10 รอบ", "11 รอบ", "ไม่สิ้นสุด"], "ans": 1},
+        {"q": "คำสั่ง while(True) จะทำงานอย่างไรใน Python?", "options": ["ไม่ทำงานเลย", "ทำงานวนซ้ำไม่รู้จบ", "เกิด Error ทันที", "ทำงานเพียงรอบเดียว"], "ans": 1},
+        {"q": "Loop ชนิดใดจะทำงานตราบเท่าที่เงื่อนไขยังเป็นจริง?", "options": ["for", "while", "repeat", "if"], "ans": 1}
+    ]
+}

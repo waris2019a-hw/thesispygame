@@ -1,0 +1,17 @@
+{
+    "id": 3,
+    "tag": "บทที่ 03",
+    "title": "การแสดงผล (Print)",
+    "desc": "การใช้คำสั่งแสดงผลข้อมูลออกทางหน้าจอ",
+    "itemName": "แตรศึก",
+    "itemIcon": "📢",
+    "docLink": "https://drive.google.com/file/d/18tSQkMcKZtFS5g45QjSMDhf6Yo1ujVnC/view?usp=sharing",
+    "video": "https://www.youtube.com/embed/W00CABuXRtI",
+    "text": "<p>การใช้คำสั่ง print() คือการแสดงผลข้อมูลออกมาสู่หน้าจอ เป็นคำสั่งพื้นฐานที่ใช้บ่อยที่สุดใน Python</p>",
+    "initCode": "print('สวัสดีชาวโลก')",
+    "quizzes": [
+        {"q": "คำสั่งใดใช้แสดงผลข้อมูลใน Python?", "options": ["speak", "print", "shout", "display"], "ans": 1},
+        {"q": "print(100 + 50) จะได้ผลลัพธ์เท่าใด?", "options": ["150", "10050", "Error", "100 + 50"], "ans": 0},
+        {"q": "ข้อความต้องถูกครอบด้วยเครื่องหมายใด?", "options": ["( )", "' ' หรือ \" \"", "[ ]", "{ }"], "ans": 1}
+    ]
+}

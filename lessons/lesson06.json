@@ -1,0 +1,17 @@
+{
+    "id": 6,
+    "tag": "บทที่ 06",
+    "title": "เงื่อนไข (Condition)",
+    "desc": "การตัดสินใจด้วยคำสั่ง If-Else",
+    "itemName": "โล่สะท้อนสัจจะ",
+    "itemIcon": "🛡️",
+    "docLink": "https://drive.google.com/file/d/1KB-xC9xfoR4AmDFsJtWmdYIy6wSCcU-n/view?usp=sharing",
+    "video": "https://www.youtube.com/embed/8QjntFTI2EY",
+    "text": "<p>การใช้เงื่อนไข If-Else ช่วยให้โปรแกรมสามารถตัดสินใจเลือกทำงานตามเงื่อนไขที่กำหนด</p>",
+    "initCode": "bravery = 100\nif bravery >= 80:\n    print('ท่านคืออัศวินที่แท้จริง')\nelse:\n    print('จงฝึกฝนต่อไป')",
+    "quizzes": [
+        {"q": "คำสั่งใดใช้ตรวจสอบเงื่อนไขรองถัดจาก if?", "options": ["other if", "elif", "another", "case"], "ans": 1},
+        {"q": "หากเงื่อนไข if เป็นเท็จ โปรแกรมจะข้ามไปทำงานที่ส่วนใด?", "options": ["if", "elif", "else", "break"], "ans": 2},
+        {"q": "ข้อมูลประเภท True หรือ False เรียกว่าอะไร?", "options": ["String", "Integer", "Boolean", "Float"], "ans": 2}
+    ]
+}

@@ -1,0 +1,17 @@
+{
+    "id": 10,
+    "tag": "บทที่ 10",
+    "title": "การสร้าง GUI",
+    "desc": "การสร้างส่วนติดต่อผู้ใช้แบบกราฟิก",
+    "itemName": "ลูกแก้ววิเศษ",
+    "itemIcon": "🔮",
+    "docLink": "https://drive.google.com/file/d/14968u-bAS3POhdGqKgIFI4EbWisLSNqi/view?usp=sharing",
+    "video": "https://www.youtube.com/embed/G5HS7nufW8o",
+    "text": "<p>สร้างหน้าตาโปรแกรม (Interface) ด้วย tkinter เพื่อให้ผู้ใช้โต้ตอบกับโปรแกรมได้ง่ายขึ้น</p>",
+    "initCode": "import tkinter as tk\n# 1. สร้างหน้าต่างหลัก\n# root = tk.Tk()\nprint('หมายเหตุ: tkinter ต้องรันในสภาพแวดล้อม Desktop')",
+    "quizzes": [
+        {"q": "GUI ย่อมาจากอะไร?", "options": ["Global Unit Info", "Graphical User Interface", "General Utility Index", "Gold User Income"], "ans": 1},
+        {"q": "Library มาตรฐานของ Python สำหรับ GUI คือ?", "options": ["math", "tkinter", "os", "random"], "ans": 1},
+        {"q": "Widget สำหรับปุ่มกดเรียกว่าอะไร?", "options": ["Label", "Entry", "Button", "Frame"], "ans": 2}
+    ]
+}

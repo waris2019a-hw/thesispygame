@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre-test บทที่ 7 - Python Fantasy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
+        body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
+        .correct { background-color: #dcfce7 !important; border-color: #22c55e !important; color: #166534 !important; }
+        .wrong { background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b !important; }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex items-center justify-center p-4">
+
+    <div id="login-overlay" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full border-t-8 border-indigo-600">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600 text-3xl"><i class="fas fa-redo"></i></div>
+                <h2 class="text-2xl font-black text-slate-800 uppercase italic">ยืนยันตัวตน</h2>
+                <p class="text-slate-500 mt-1">กรุณาเข้าสู่ระบบเพื่อบันทึกคะแนน</p>
+            </div>
+            <div class="space-y-4">
+                <div class="text-left">
+                    <label class="block text-xs font-bold uppercase text-slate-400 mb-1 tracking-widest">รหัสนักศึกษา</label>
+                    <input type="text" id="student-id" class="w-full border-2 border-slate-100 rounded-xl px-4 py-3 focus:ring-4 focus:ring-indigo-100 outline-none font-bold" placeholder="กรอกรหัสนักศึกษา">
+                </div>
+                <div class="text-left">
+                    <label class="block text-xs font-bold uppercase text-slate-400 mb-1 tracking-widest">ชื่อ-นามสกุล</label>
+                    <input type="text" id="student-name" class="w-full border-2 border-slate-100 rounded-xl px-4 py-3 focus:ring-4 focus:ring-indigo-100 outline-none font-bold" placeholder="กรอกชื่อ-นามสกุล">
+                </div>
+                <button onclick="startQuiz()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-xl font-black uppercase tracking-widest active:scale-95 shadow-lg transition-all">เริ่มทำแบบทดสอบ</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-2xl w-full border-t-8 border-indigo-600">
+        <div class="text-center mb-8">
+            <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600 text-4xl"><i class="fas fa-redo"></i></div>
+            <h1 class="text-3xl font-black text-slate-800 uppercase italic">แบบทดสอบก่อนเรียน</h1>
+            <p class="text-slate-500 mt-2 font-medium">บทที่ 7: Loop For และ While</p>
+        </div>
+
+        <div id="quiz-container" class="space-y-8"></div>
+
+        <div id="result-area" class="hidden mt-10 p-6 bg-indigo-50 rounded-2xl text-center border-2 border-indigo-100">
+            <p class="text-xl font-bold text-indigo-800">คุณได้คะแนน <span id="final-score" class="text-3xl">0</span> / 5</p>
+            <p class="text-indigo-600 text-sm mt-2">บันทึกคะแนนเรียบร้อยแล้ว</p>
+        </div>
+
+        <div class="mt-10 pt-6 border-t border-slate-100 flex justify-center gap-4">
+            <button id="submit-btn" onclick="submitQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-3 rounded-xl font-bold transition-all uppercase tracking-widest shadow-lg">ส่งคำตอบ</button>
+            <button onclick="window.history.back()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-8 py-3 rounded-xl font-bold transition-all uppercase tracking-widest">ย้อนกลับ</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyBkRS0JyVqO8l4scTBAnB93D3B7BeAAE9w", authDomain: "scorestudent-f18c5.firebaseapp.com", databaseURL: "https://scorestudent-f18c5-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "scorestudent-f18c5", storageBucket: "scorestudent-f18c5.firebasestorage.app", messagingSenderId: "55893928684", appId: "1:55893928684:web:fcee9b42d6b8b87df853c9" };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const questions = [
+            { q: "1. Loop ชนิดใดเหมาะสำหรับการทำงานที่ทราบจำนวนรอบที่แน่นอน?", opts: ["while", "for", "do-while", "infinite"], ans: 1 },
+            { q: "2. คำสั่ง range(5) ใน Python จะวนซ้ำกี่รอบ?", opts: ["4 รอบ", "5 รอบ", "6 รอบ", "ไม่จำกัด"], ans: 1 },
+            { q: "3. Loop ชนิดใดจะทำงานตราบเท่าที่เงื่อนไขเป็นจริง (True)?", opts: ["for", "while", "if", "switch"], ans: 1 },
+            { q: "4. คำสั่งใดใช้สำหรับ 'หยุด' การทำงานของ Loop ทันที?", opts: ["continue", "stop", "break", "exit"], ans: 2 },
+            { q: "5. คำสั่ง continue ใน Loop มีหน้าที่อะไร?", opts: ["หยุด Loop ทันที", "ข้ามรอบปัจจุบันไปเริ่มรอบถัดไป", "เริ่ม Loop ใหม่ตั้งแต่ต้น", "หยุดโปรแกรมทั้งหมด"], ans: 1 }
+        ];
+
+        let userStudentId = '';
+        let userStudentName = '';
+        function startQuiz() {
+            const sid = document.getElementById('student-id').value.trim();
+            const sname = document.getElementById('student-name').value.trim();
+            if (!sid) { alert('กรุณากรอกรหัสนักศึกษา'); return; }
+            if (!sname) { alert('กรุณากรอกชื่อ-นามสกุล'); return; }
+            userStudentId = sid;
+            userStudentName = sname;
+            document.getElementById('login-overlay').classList.add('hidden');
+            renderQuiz();
+        }
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = questions.map((q, qIdx) => `
+                <div class="question-block space-y-4" id="q-block-${qIdx}">
+                    <p class="text-lg font-bold text-slate-700">${q.q}</p>
+                    <div class="grid grid-cols-1 gap-3">
+                        ${q.opts.map((opt, oIdx) => `
+                            <button onclick="selectOption(${qIdx}, ${oIdx})" class="opt-btn text-left p-4 rounded-xl border-2 border-slate-100 hover:border-indigo-400 hover:bg-indigo-50 transition-all font-medium" data-q="${qIdx}" data-o="${oIdx}">
+                                ${['ก.', 'ข.', 'ค.', 'ง.'][oIdx]} ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        let userAnswers = new Array(questions.length).fill(null);
+        function selectOption(qIdx, oIdx) {
+            userAnswers[qIdx] = oIdx;
+            const block = document.getElementById(`q-block-${qIdx}`);
+            block.querySelectorAll('.opt-btn').forEach((btn, idx) => {
+                btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600');
+                if (idx === oIdx) btn.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600');
+            });
+        }
+
+        async function submitQuiz() {
+            if (userAnswers.includes(null)) { alert('กรุณาตอบคำถามให้ครบทุกข้อ'); return; }
+            let score = 0;
+            questions.forEach((q, i) => {
+                const buttons = document.querySelectorAll(`[data-q="${i}"]`);
+                buttons.forEach((btn, idx) => {
+                    if (idx === q.ans) btn.classList.add('correct');
+                    if (userAnswers[i] === idx && idx !== q.ans) btn.classList.add('wrong');
+                });
+                if (userAnswers[i] === q.ans) score++;
+            });
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('result-area').classList.remove('hidden');
+            document.getElementById('submit-btn').classList.add('hidden');
+            try {
+                await db.collection('artifacts').doc('python-fantasy-v1').collection('public').doc('data').collection('pretests').doc(userStudentId + '_pre7').set({
+                    studentId: userStudentId, studentName: userStudentName, lessonId: 7, lessonName: 'Loop For และ While', score: score, total: 5, timestamp: new Date()
+                });
+            } catch (e) { console.error(e); }
+        }
+    </script>
+</body>
+</html>

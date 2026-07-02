@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - Python Fantasy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
+        body { font-family: 'Kanit', sans-serif; background-color: #f1f5f9; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Teacher Login Modal -->
+    <div id="teacher-login-modal" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full border-t-8 border-emerald-600">
+            <div class="text-center mb-6">
+                <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600 text-4xl">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <h2 class="text-3xl font-black text-slate-800 uppercase italic">Teacher Portal</h2>
+                <p class="text-slate-500 mt-2 font-medium">เข้าสู่ระบบสำหรับครูผู้สอน</p>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1 tracking-widest">Username</label>
+                    <input type="text" id="teacher-user" class="w-full border-2 border-slate-100 rounded-xl px-4 py-3 focus:ring-4 focus:ring-emerald-100 outline-none font-bold" placeholder="teacher">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1 tracking-widest">Password</label>
+                    <input type="password" id="teacher-pass" class="w-full border-2 border-slate-100 rounded-xl px-4 py-3 focus:ring-4 focus:ring-emerald-100 outline-none font-bold" placeholder="••••••••">
+                </div>
+                <p id="teacher-error" class="hidden text-sm text-red-500 text-center font-bold"></p>
+                <button onclick="teacherLogin()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-black uppercase tracking-widest active:scale-95 shadow-lg shadow-emerald-200 transition-all">
+                    เข้าสู่ระบบ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="hidden">
+        <header class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shadow-sm sticky top-0 z-30">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                    <i class="fas fa-chalkboard-teacher text-xl"></i>
+                </div>
+                <h1 class="text-xl font-black text-slate-800 uppercase italic">Teacher Dashboard</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-100">
+                    <p class="text-[10px] font-black uppercase text-emerald-600">นักเรียนทั้งหมด</p>
+                    <p class="text-2xl font-black text-emerald-700 leading-none" id="total-students">0</p>
+                </div>
+                <button onclick="teacherLogout()" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-xl font-bold transition-all flex items-center">
+                    <i class="fas fa-sign-out-alt mr-2"></i> ออกจากระบบ
+                </button>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto p-6">
+            <!-- Filter & Search -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-6 flex flex-col md:flex-row gap-4 items-center">
+                <div class="flex-1 w-full">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="search-input" oninput="filterStudents()" class="w-full border-2 border-slate-100 rounded-xl pl-12 pr-4 py-3 focus:ring-4 focus:ring-emerald-100 outline-none" placeholder="ค้นหาด้วยรหัสนักศึกษา หรือชื่อ-นามสกุล...">
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <select id="sort-select" onchange="filterStudents()" class="border-2 border-slate-100 rounded-xl px-4 py-3 focus:ring-4 focus:ring-emerald-100 outline-none font-bold">
+                        <option value="score-desc">คะแนนมาก → น้อย</option>
+                        <option value="score-asc">คะแนนน้อย → มาก</option>
+                        <option value="name">ชื่อ ก-ฮ</option>
+                        <option value="updated">อัปเดตล่าสุด</option>
+                    </select>
+                    <button onclick="loadStudents()" class="bg-slate-100 hover:bg-slate-200 px-4 py-3 rounded-xl font-bold transition-all">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-5 text-white shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-emerald-100 text-xs font-black uppercase tracking-wider">นักเรียนทั้งหมด</p>
+                            <p class="text-3xl font-black mt-1" id="stat-total">0</p>
+                        </div>
+                        <i class="fas fa-users text-4xl text-emerald-200 opacity-50"></i>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-5 text-white shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-blue-100 text-xs font-black uppercase tracking-wider">คะแนนเฉลี่ย</p>
+                            <p class="text-3xl font-black mt-1" id="stat-avg">0</p>
+                        </div>
+                        <i class="fas fa-chart-line text-4xl text-blue-200 opacity-50"></i>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-5 text-white shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-purple-100 text-xs font-black uppercase tracking-wider">ทำภารกิจสำเร็จ</p>
+                            <p class="text-3xl font-black mt-1" id="stat-completed">0</p>
+                        </div>
+                        <i class="fas fa-trophy text-4xl text-purple-200 opacity-50"></i>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-5 text-white shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-orange-100 text-xs font-black uppercase tracking-wider">อันดับสูงสุด</p>
+                            <p class="text-3xl font-black mt-1" id="stat-top">0</p>
+                        </div>
+                        <i class="fas fa-crown text-4xl text-orange-200 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students Table -->
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-black uppercase text-slate-500 tracking-wider">อันดับ</th>
+                                <th class="px-6 py-4 text-left text-xs font-black uppercase text-slate-500 tracking-wider">รหัสนักศึกษา</th>
+                                <th class="px-6 py-4 text-left text-xs font-black uppercase text-slate-500 tracking-wider">ชื่อ-นามสกุล</th>
+                                <th class="px-6 py-4 text-left text-xs font-black uppercase text-slate-500 tracking-wider">Avatar</th>
+                                <th class="px-6 py-4 text-left text-xs font-black uppercase text-slate-500 tracking-wider">Rank</th>
+                                <th class="px-6 py-4 text-right text-xs font-black uppercase text-slate-500 tracking-wider">คะแนน XP</th>
+                                <th class="px-6 py-4 text-right text-xs font-black uppercase text-slate-500 tracking-wider">ภารกิจสำเร็จ</th>
+                                <th class="px-6 py-4 text-right text-xs font-black uppercase text-slate-500 tracking-wider">อัปเดตล่าสุด</th>
+                                <th class="px-6 py-4 text-center text-xs font-black uppercase text-slate-500 tracking-wider">การจัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-table" class="divide-y divide-slate-100">
+                            <tr>
+                                <td colspan="9" class="px-6 py-12 text-center text-slate-400 italic">กำลังโหลดข้อมูล...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg">
+        <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-blue-600 text-3xl">
+                    <i class="fas fa-user-edit"></i>
+                </div>
+                <h3 class="text-2xl font-black text-slate-800 uppercase">แก้ไขข้อมูลนักเรียน</h3>
+            </div>
+            <div class="space-y-4">
+                <input type="hidden" id="edit-uid">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">รหัสนักศึกษา</label>
+                    <input type="text" id="edit-studentId" class="w-full border-2 border-slate-100 rounded-xl px-4 py-3 font-bold focus:ring-4 focus:ring-blue-100 outline-none" readonly>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">ชื่อ-นามสกุล</label>
+                    <input type="text" id="edit-fullName" class="w-full border-2 border-slate-100 rounded-xl px-4 py-3 font-bold focus:ring-4 focus:ring-blue-100 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">คะแนน XP</label>
+                    <input type="number" id="edit-score" class="w-full border-2 border-slate-100 rounded-xl px-4 py-3 font-bold focus:ring-4 focus:ring-blue-100 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">เพิ่มคะแนนพิเศษ (Bonus)</label>
+                    <input type="number" id="edit-bonus" class="w-full border-2 border-slate-100 rounded-xl px-4 py-3 font-bold focus:ring-4 focus:ring-blue-100 outline-none" placeholder="ระบุคะแนนที่ต้องการเพิ่ม" value="0">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">หมายเหตุจากครู</label>
+                    <textarea id="edit-note" class="w-full border-2 border-slate-100 rounded-xl px-4 py-3 font-medium focus:ring-4 focus:ring-blue-100 outline-none" rows="2" placeholder="เช่น ทำงานดีมาก"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button onclick="closeEditModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 rounded-xl uppercase">ยกเลิก</button>
+                    <button onclick="saveStudentEdit()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl uppercase shadow-lg">บันทึก</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .modal-bg { background: rgba(0,0,0,0.75); backdrop-filter: blur(10px); }
+    </style>
+
+    <script>
+        // Firebase Init
+        try {
+            const firebaseConfig = {
+                apiKey: "AIzaSyBkRS0JyVqO8l4scTBAnB93D3B7BeAAE9w",
+                authDomain: "scorestudent-f18c5.firebaseapp.com",
+                databaseURL: "https://scorestudent-f18c5-default-rtdb.asia-southeast1.firebasedatabase.app",
+                projectId: "scorestudent-f18c5",
+                storageBucket: "scorestudent-f18c5.firebasestorage.app",
+                messagingSenderId: "55893928684",
+                appId: "1:55893928684:web:fcee9b42d6b8b87df853c9"
+            };
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            window.db = firebase.firestore();
+            window.appId = 'python-fantasy-v1';
+        } catch (err) {
+            console.error("Firebase init error:", err);
+        }
+
+        let allStudents = [];
+
+        // --- Teacher Authentication ---
+        function teacherLogin() {
+            const user = document.getElementById('teacher-user').value.trim();
+            const pass = document.getElementById('teacher-pass').value;
+            const errorEl = document.getElementById('teacher-error');
+            
+            if (user === 'teacher' && pass === 'teacher123') {
+                errorEl.classList.add('hidden');
+                sessionStorage.setItem('teacher_auth', 'true');
+                document.getElementById('teacher-login-modal').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                loadStudents();
+            } else {
+                errorEl.textContent = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        function teacherLogout() {
+            if (confirm('ต้องการออกจากระบบหรือไม่?')) {
+                sessionStorage.removeItem('teacher_auth');
+                window.location.reload();
+            }
+        }
+
+        // Check existing auth
+        if (sessionStorage.getItem('teacher_auth') === 'true') {
+            document.getElementById('teacher-login-modal').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            setTimeout(loadStudents, 500);
+        }
+
+        document.getElementById('teacher-pass').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') teacherLogin();
+        });
+
+        // --- Load Students ---
+        async function loadStudents() {
+            const tbody = document.getElementById('students-table');
+            tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-12 text-center text-slate-400 italic"><i class="fas fa-spinner fa-spin mr-2"></i>กำลังโหลดข้อมูล...</td></tr>';
+            
+            if (!window.db) {
+                tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-12 text-center text-red-400">ไม่สามารถเชื่อมต่อ Firebase ได้</td></tr>';
+                return;
+            }
+
+            try {
+                const snapshot = await window.db.collection('artifacts').doc(window.appId).collection('public').doc('data').collection('knights').get();
+                
+                allStudents = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    allStudents.push({ ...data, docId: doc.id });
+                });
+
+                updateStatistics();
+                renderStudents(allStudents);
+            } catch (err) {
+                console.error("Load students failed:", err);
+                tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-12 text-center text-red-400">เกิดข้อผิดพลาด: ' + err.message + '</td></tr>';
+            }
+        }
+
+        function updateStatistics() {
+            document.getElementById('total-students').textContent = allStudents.length;
+            document.getElementById('stat-total').textContent = allStudents.length;
+            
+            if (allStudents.length > 0) {
+                const totalScore = allStudents.reduce((sum, s) => sum + (s.score || 0), 0);
+                const avg = Math.round(totalScore / allStudents.length);
+                document.getElementById('stat-avg').textContent = avg.toLocaleString();
+                
+                const completed = allStudents.reduce((sum, s) => sum + (s.completed?.length || 0), 0);
+                document.getElementById('stat-completed').textContent = completed;
+                
+                const sorted = [...allStudents].sort((a, b) => (b.score || 0) - (a.score || 0));
+                document.getElementById('stat-top').textContent = (sorted[0].score || 0).toLocaleString();
+            } else {
+                document.getElementById('stat-avg').textContent = '0';
+                document.getElementById('stat-completed').textContent = '0';
+                document.getElementById('stat-top').textContent = '0';
+            }
+        }
+
+        function renderStudents(students) {
+            const tbody = document.getElementById('students-table');
+            
+            if (students.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-12 text-center text-slate-400 italic">ไม่พบข้อมูลนักเรียน</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = students.map((s, i) => {
+                const updated = s.updatedAt ? new Date(s.updatedAt.seconds * 1000).toLocaleString('th-TH') : '-';
+                return `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg ${i < 3 ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-100 text-slate-600'} font-black text-sm">${i + 1}</span>
+                        </td>
+                        <td class="px-6 py-4 font-mono text-sm font-bold text-slate-700">${s.studentId || '-'}</td>
+                        <td class="px-6 py-4 font-bold text-slate-800">${s.fullName || s.name || 'ไม่ระบุ'}</td>
+                        <td class="px-6 py-4 text-2xl">${s.avatar || '⚔️'}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 rounded-full text-xs font-black ${getRankColor(s.rank)}">${s.rank || 'Novice'}</span>
+                        </td>
+                        <td class="px-6 py-4 text-right font-black text-indigo-600">${(s.score || 0).toLocaleString()} XP</td>
+                        <td class="px-6 py-4 text-right">
+                            <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded-lg text-xs font-black">${(s.completed?.length || 0)}/12</span>
+                        </td>
+                        <td class="px-6 py-4 text-right text-xs text-slate-500">${updated}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex justify-center space-x-2">
+                                <button onclick="openEditModal('${s.docId}')" class="w-9 h-9 rounded-lg bg-blue-100 hover:bg-blue-600 hover:text-white text-blue-600 flex items-center justify-center transition-all" title="แก้ไข">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="addBonusXP('${s.docId}', '${s.fullName || s.name || 'นักเรียน'}')" class="w-9 h-9 rounded-lg bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-600 flex items-center justify-center transition-all" title="เพิ่มคะแนน">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                                <button onclick="resetProgress('${s.docId}', '${s.fullName || s.name || 'นักเรียน'}')" class="w-9 h-9 rounded-lg bg-yellow-100 hover:bg-yellow-600 hover:text-white text-yellow-600 flex items-center justify-center transition-all" title="รีเซ็ตความก้าวหน้า">
+                                    <i class="fas fa-redo"></i>
+                                </button>
+                                <button onclick="deleteStudent('${s.docId}', '${s.fullName || s.name || 'นักเรียน'}')" class="w-9 h-9 rounded-lg bg-red-100 hover:bg-red-600 hover:text-white text-red-600 flex items-center justify-center transition-all" title="ลบ">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function getRankColor(rank) {
+            if (!rank) return 'bg-slate-100 text-slate-700';
+            if (rank.includes('Legend')) return 'bg-purple-100 text-purple-700';
+            if (rank.includes('Grand')) return 'bg-indigo-100 text-indigo-700';
+            if (rank.includes('Knight') && !rank.includes('Grand') && !rank.includes('Legend')) return 'bg-blue-100 text-blue-700';
+            if (rank.includes('Squire')) return 'bg-green-100 text-green-700';
+            return 'bg-slate-100 text-slate-700';
+        }
+
+        // --- Filter & Sort ---
+        function filterStudents() {
+            const query = document.getElementById('search-input').value.trim().toLowerCase();
+            const sortBy = document.getElementById('sort-select').value;
+            
+            let filtered = allStudents.filter(s => {
+                if (!query) return true;
+                return (s.studentId && s.studentId.toLowerCase().includes(query)) ||
+                       (s.fullName && s.fullName.toLowerCase().includes(query)) ||
+                       (s.name && s.name.toLowerCase().includes(query));
+            });
+
+            switch(sortBy) {
+                case 'score-desc':
+                    filtered.sort((a, b) => (b.score || 0) - (a.score || 0));
+                    break;
+                case 'score-asc':
+                    filtered.sort((a, b) => (a.score || 0) - (b.score || 0));
+                    break;
+                case 'name':
+                    filtered.sort((a, b) => (a.fullName || a.name || '').localeCompare(b.fullName || b.name || ''));
+                    break;
+                case 'updated':
+                    filtered.sort((a, b) => {
+                        const aTime = a.updatedAt?.seconds || 0;
+                        const bTime = b.updatedAt?.seconds || 0;
+                        return bTime - aTime;
+                    });
+                    break;
+            }
+
+            renderStudents(filtered);
+        }
+
+        // --- Edit Modal ---
+        function openEditModal(docId) {
+            const student = allStudents.find(s => s.docId === docId);
+            if (!student) return;
+            
+            document.getElementById('edit-uid').value = docId;
+            document.getElementById('edit-studentId').value = student.studentId || '';
+            document.getElementById('edit-fullName').value = student.fullName || student.name || '';
+            document.getElementById('edit-score').value = student.score || 0;
+            document.getElementById('edit-bonus').value = 0;
+            document.getElementById('edit-note').value = '';
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+        }
+
+        async function saveStudentEdit() {
+            const docId = document.getElementById('edit-uid').value;
+            const fullName = document.getElementById('edit-fullName').value.trim();
+            const score = parseInt(document.getElementById('edit-score').value) || 0;
+            const bonus = parseInt(document.getElementById('edit-bonus').value) || 0;
+            const note = document.getElementById('edit-note').value.trim();
+            
+            if (!fullName) {
+                alert('กรุณากรอกชื่อ-นามสกุล');
+                return;
+            }
+
+            const totalScore = score + bonus;
+            const rank = calculateRank(totalScore);
+
+            try {
+                const studentRef = window.db.collection('artifacts').doc(window.appId).collection('public').doc('data').collection('knights').doc(docId);
+                await studentRef.update({
+                    fullName: fullName,
+                    name: fullName,
+                    score: totalScore,
+                    rank: rank,
+                    teacherNote: note || null,
+                    bonusAdded: bonus > 0 ? bonus : null,
+                    lastModified: new Date()
+                });
+                
+                closeEditModal();
+                await loadStudents();
+                alert('บันทึกข้อมูลสำเร็จ!');
+            } catch (err) {
+                console.error("Save error:", err);
+                alert('เกิดข้อผิดพลาด: ' + err.message);
+            }
+        }
+
+        function calculateRank(score) {
+            if (score >= 3000) return "Knight Legend 👑";
+            if (score >= 2000) return "Grand Knight 🔮";
+            if (score >= 1000) return "Knight 🧙";
+            if (score >= 500) return "Squire 🛡️";
+            return "Novice";
+        }
+
+        // --- Quick Actions ---
+        async function addBonusXP(docId, name) {
+            const bonus = prompt(`เพิ่มคะแนนพิเศษให้ "${name}" (ระบุจำนวนคะแนน):`, '50');
+            if (bonus === null || isNaN(bonus)) return;
+            
+            const points = parseInt(bonus);
+            try {
+                const studentRef = window.db.collection('artifacts').doc(window.appId).collection('public').doc('data').collection('knights').doc(docId);
+                const doc = await studentRef.get();
+                const currentScore = doc.data().score || 0;
+                const newScore = currentScore + points;
+                
+                await studentRef.update({
+                    score: newScore,
+                    rank: calculateRank(newScore),
+                    bonusAdded: points,
+                    lastModified: new Date()
+                });
+                
+                await loadStudents();
+                alert(`เพิ่มคะแนน ${points} XP ให้ ${name} สำเร็จ!`);
+            } catch (err) {
+                console.error("Add bonus error:", err);
+                alert('เกิดข้อผิดพลาด: ' + err.message);
+            }
+        }
+
+        async function resetProgress(docId, name) {
+            if (!confirm(`รีเซ็ตความก้าวหน้าทั้งหมดของ "${name}"?\n\n- คะแนน XP จะถูกรีเซ็ตเป็น 0\n- ภารกิจที่ทำเสร็จจะถูกลบ\n- ไอเทมจะถูกลบ`)) return;
+
+            try {
+                const studentRef = window.db.collection('artifacts').doc(window.appId).collection('public').doc('data').collection('knights').doc(docId);
+                await studentRef.update({
+                    score: 0,
+                    rank: 'Novice',
+                    completed: [],
+                    inventory: [],
+                    resetAt: new Date()
+                });
+                
+                await loadStudents();
+                alert(`รีเซ็ตความก้าวหน้าของ ${name} สำเร็จ!`);
+            } catch (err) {
+                console.error("Reset error:", err);
+                alert('เกิดข้อผิดพลาด: ' + err.message);
+            }
+        }
+
+        async function deleteStudent(docId, name) {
+            if (!confirm(`ลบนักเรียน "${name}" ออกจากระบบ?\n\nการกระทำนี้ไม่สามารถยกเลิกได้!`)) return;
+
+            try {
+                await window.db.collection('artifacts').doc(window.appId).collection('public').doc('data').collection('knights').doc(docId).delete();
+                await loadStudents();
+                alert(`ลบ ${name} ออกจากระบบสำเร็จ!`);
+            } catch (err) {
+                console.error("Delete error:", err);
+                alert('เกิดข้อผิดพลาด: ' + err.message);
+            }
+        }
+    </script>
+</body>
+</html>

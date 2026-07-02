@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายงานคะแนนตามบทเรียน - Python Fantasy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
+        body { font-family: 'Kanit', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .card { background: white; border-radius: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        .tab-btn { padding: 0.625rem 1.25rem; border-radius: 0.75rem; font-weight: 700; font-size: 0.875rem; border: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+        .tab-btn.active { background: #4f46e5; color: white; border-color: #4f46e5; }
+        .tab-btn:not(.active) { background: #f1f5f9; color: #475569; border-color: #e2e8f0; }
+        .tab-btn:not(.active):hover { background: #e2e8f0; }
+        .stat-card { background: white; border-radius: 1rem; padding: 1rem; border: 1px solid #e2e8f0; }
+        .type-btn { padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 700; font-size: 0.8rem; border: 2px solid #e2e8f0; cursor: pointer; background: white; color: #64748b; transition: all 0.2s; }
+        .type-btn.active-pre { background: #dbeafe; color: #1d4ed8; border-color: #3b82f6; }
+        .type-btn.active-post { background: #dcfce7; color: #166534; border-color: #22c55e; }
+        .type-btn.active-all { background: #f1f5f9; color: #475569; border-color: #94a3b8; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="card p-6 mb-6 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white text-xl shadow-lg">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black text-slate-800">รายงานคะแนนตามบทเรียน</h1>
+                    <p class="text-slate-400 text-sm">Pre-test & Post-test Scores by Chapter</p>
+                </div>
+            </div>
+            <a href="pyquest.html" class="bg-indigo-600 text-white px-5 py-2 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg">
+                <i class="fas fa-arrow-left mr-2"></i>กลับ
+            </a>
+        </div>
+
+        <!-- Type Tabs -->
+        <div class="card p-4 mb-4">
+            <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                <span style="font-weight:700;font-size:0.875rem;color:#475569;margin-right:0.5rem;">ประเภท:</span>
+                <button id="type-all" class="type-btn active-all" onclick="pickType('all')">ทั้งหมด</button>
+                <button id="type-pre" class="type-btn" onclick="pickType('pre')"><i class="fas fa-clipboard-list mr-1"></i>Pre-test (ก่อนเรียน)</button>
+                <button id="type-post" class="type-btn" onclick="pickType('post')"><i class="fas fa-clipboard-check mr-1"></i>Post-test (หลังเรียน)</button>
+            </div>
+        </div>
+
+        <!-- Chapter Tabs -->
+        <div class="card p-4 mb-6">
+            <div id="tabs" style="display:flex;gap:0.5rem;flex-wrap:wrap;"></div>
+        </div>
+
+        <!-- Stats -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;">
+            <div class="stat-card">
+                <div style="color:#94a3b8;font-size:0.75rem;font-weight:700;text-transform:uppercase;">นักเรียนทั้งหมด</div>
+                <div id="s-total" style="font-size:1.75rem;font-weight:900;color:#4f46e5;">0</div>
+            </div>
+            <div class="stat-card">
+                <div style="color:#94a3b8;font-size:0.75rem;font-weight:700;text-transform:uppercase;">คะแนนเฉลี่ย</div>
+                <div id="s-avg" style="font-size:1.75rem;font-weight:900;color:#22c55e;">0</div>
+            </div>
+            <div class="stat-card">
+                <div style="color:#94a3b8;font-size:0.75rem;font-weight:700;text-transform:uppercase;">สูงสุด</div>
+                <div id="s-max" style="font-size:1.75rem;font-weight:900;color:#f97316;">0</div>
+            </div>
+            <div class="stat-card">
+                <div style="color:#94a3b8;font-size:0.75rem;font-weight:700;text-transform:uppercase;">ผ่าน (≥3)</div>
+                <div id="s-pass" style="font-size:1.75rem;font-weight:900;color:#10b981;">0</div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h2 id="table-title" style="font-size:1.25rem;font-weight:700;color:#334155;">คะแนนทั้งหมด</h2>
+                <div style="display:flex;gap:0.5rem;align-items:center;">
+                    <input type="text" id="search" oninput="render()" style="padding:0.5rem 1rem;border:2px solid #e2e8f0;border-radius:0.75rem;font-size:0.875rem;width:100%;max-width:16rem;" placeholder="ค้นหา รหัส / ชื่อ...">
+                    <button onclick="exportCSV()" style="padding:0.5rem 1rem;background:#22c55e;color:white;border:none;border-radius:0.75rem;font-weight:700;font-size:0.875rem;cursor:pointer;white-space:nowrap;">
+                        <i class="fas fa-file-csv mr-1"></i>Export CSV
+                    </button>
+                </div>
+            </div>
+            <div style="overflow-x:auto;">
+                <table style="width:100%;text-align:left;">
+                    <thead style="background:#f8fafc;">
+                        <tr style="border-bottom:2px solid #e2e8f0;color:#64748b;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">
+                            <th style="padding:1rem 1.5rem;">รหัสนักศึกษา</th>
+                            <th style="padding:1rem 1.5rem;">ชื่อ-นามสกุล</th>
+                            <th style="padding:1rem 1.5rem;text-align:center;">ประเภท</th>
+                            <th style="padding:1rem 1.5rem;text-align:center;">บทเรียน</th>
+                            <th style="padding:1rem 1.5rem;text-align:center;">คะแนน</th>
+                            <th style="padding:1rem 1.5rem;text-align:right;">วันที่ทำ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyBkRS0JyVqO8l4scTBAnB93D3B7BeAAE9w", authDomain: "scorestudent-f18c5.firebaseapp.com", databaseURL: "https://scorestudent-f18c5-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "scorestudent-f18c5", storageBucket: "scorestudent-f18c5.firebasestorage.app", messagingSenderId: "55893928684", appId: "1:55893928684:web:fcee9b42d6b8b87df853c9" };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const lessons = {
+            1:'แนะนำรายวิชาและพื้นฐาน Python', 2:'ผังงาน (Flowchart)', 3:'การแสดงผลด้วยคำสั่ง print',
+            4:'ตัวแปรของ Python', 5:'การคำนวณด้วย Operator', 6:'เงื่อนไข Condition If-Else',
+            7:'Loop For และ While', 8:'ฟังก์ชัน (Function)', 9:'Collection (List, Tuple, Dictionary)',
+            10:'การสร้าง GUI', 11:'การทดสอบยูนิต (Unit Testing)', 12:'การแก้ไขข้อผิดพลาด (Debugging)'
+        };
+
+        let preData = [];
+        let postData = [];
+        let allData = [];
+        let curLesson = 0;
+        let curType = 'all';
+
+        function initTabs() {
+            const el = document.getElementById('tabs');
+            let h = '<button class="tab-btn active" onclick="pick(0)">ทั้งหมด</button>';
+            for (let i = 1; i <= 12; i++) h += `<button class="tab-btn" onclick="pick(${i})">บทที่ ${i}</button>`;
+            el.innerHTML = h;
+        }
+
+        function pickType(type) {
+            curType = type;
+            document.querySelectorAll('.type-btn').forEach(b => b.className = 'type-btn');
+            if (type === 'pre') document.getElementById('type-pre').classList.add('active-pre');
+            else if (type === 'post') document.getElementById('type-post').classList.add('active-post');
+            else document.getElementById('type-all').classList.add('active-all');
+            render();
+        }
+
+        function pick(n) {
+            curLesson = n;
+            document.querySelectorAll('#tabs .tab-btn').forEach((b, i) => {
+                b.classList.toggle('active', i === n);
+            });
+            render();
+        }
+
+        function render() {
+            const q = document.getElementById('search').value.toLowerCase();
+
+            if (curType === 'pre') allData = preData.map(d => ({...d, type: 'Pre-test'}));
+            else if (curType === 'post') allData = postData.map(d => ({...d, type: 'Post-test'}));
+            else {
+                allData = [
+                    ...preData.map(d => ({...d, type: 'Pre-test'})),
+                    ...postData.map(d => ({...d, type: 'Post-test'}))
+                ];
+            }
+
+            let list = allData.filter(d => {
+                if (curLesson > 0 && d.lessonId !== curLesson) return false;
+                if (q && !(d.studentId||'').toLowerCase().includes(q) && !(d.studentName||'').toLowerCase().includes(q)) return false;
+                return true;
+            });
+
+            // stats
+            const n = list.length;
+            document.getElementById('s-total').textContent = n;
+            if (n === 0) {
+                document.getElementById('s-avg').textContent = '0';
+                document.getElementById('s-max').textContent = '0';
+                document.getElementById('s-pass').textContent = '0';
+            } else {
+                const sum = list.reduce((a, b) => a + (b.score || 0), 0);
+                document.getElementById('s-avg').textContent = (sum / n).toFixed(1);
+                document.getElementById('s-max').textContent = Math.max(...list.map(d => d.score || 0));
+                document.getElementById('s-pass').textContent = list.filter(d => (d.score || 0) >= 3).length;
+            }
+
+            // title
+            const typeLabel = curType === 'pre' ? 'Pre-test' : curType === 'post' ? 'Post-test' : 'ทั้งหมด';
+            document.getElementById('table-title').textContent = curLesson === 0
+                ? `คะแนน${typeLabel}`
+                : `บทที่ ${curLesson}: ${lessons[curLesson]} (${typeLabel})`;
+
+            // table
+            const tbody = document.getElementById('tbody');
+            if (n === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="padding:3rem;text-align:center;color:#94a3b8;font-style:italic;">ยังไม่มีข้อมูล</td></tr>';
+                return;
+            }
+            tbody.innerHTML = list.map(d => {
+                const isPre = d.type === 'Pre-test';
+                const bgColor = isPre ? '#dbeafe' : '#dcfce7';
+                const txtColor = isPre ? '#1d4ed8' : '#166534';
+                return `
+                <tr style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                    <td style="padding:1rem 1.5rem;font-family:monospace;font-weight:700;color:#334155;">${d.studentId||'-'}</td>
+                    <td style="padding:1rem 1.5rem;font-weight:500;color:#475569;">${d.studentName||'ไม่ระบุ'}</td>
+                    <td style="padding:1rem 1.5rem;text-align:center;">
+                        <span style="background:${bgColor};color:${txtColor};padding:0.25rem 0.75rem;border-radius:0.5rem;font-size:0.75rem;font-weight:700;">${d.type}</span>
+                    </td>
+                    <td style="padding:1rem 1.5rem;text-align:center;">
+                        <span style="background:#e0e7ff;color:#4f46e5;padding:0.25rem 0.75rem;border-radius:0.5rem;font-size:0.75rem;font-weight:700;">บทที่ ${d.lessonId||'-'}</span>
+                    </td>
+                    <td style="padding:1rem 1.5rem;text-align:center;">
+                        <span style="background:#dbeafe;color:#1d4ed8;padding:0.25rem 0.75rem;border-radius:9999px;font-weight:900;">${d.score||0} / ${d.total||5}</span>
+                    </td>
+                    <td style="padding:1rem 1.5rem;text-align:right;font-size:0.75rem;color:#94a3b8;">
+                        ${d.timestamp && d.timestamp.seconds ? new Date(d.timestamp.seconds*1000).toLocaleString('th-TH') : '-'}
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function load() {
+            document.getElementById('tbody').innerHTML = '<tr><td colspan="6" style="padding:3rem;text-align:center;color:#94a3b8;font-style:italic;">กำลังโหลด...</td></tr>';
+            try {
+                const [preSnap, postSnap] = await Promise.all([
+                    db.collection('artifacts').doc('python-fantasy-v1').collection('public').doc('data').collection('pretests').orderBy('timestamp','desc').get(),
+                    db.collection('artifacts').doc('python-fantasy-v1').collection('public').doc('data').collection('posttests').orderBy('timestamp','desc').get()
+                ]);
+                preData = [];
+                postData = [];
+                preSnap.forEach(doc => preData.push(doc.data()));
+                postSnap.forEach(doc => postData.push(doc.data()));
+                render();
+            } catch(e) {
+                console.error(e);
+                document.getElementById('tbody').innerHTML = '<tr><td colspan="6" style="padding:3rem;text-align:center;color:#ef4444;">โหลดข้อมูลไม่สำเร็จ</td></tr>';
+            }
+        }
+
+        function exportCSV() {
+            const q = document.getElementById('search').value.toLowerCase();
+
+            let exportData = [];
+            if (curType === 'pre') exportData = preData.map(d => ({...d, type: 'Pre-test'}));
+            else if (curType === 'post') exportData = postData.map(d => ({...d, type: 'Post-test'}));
+            else {
+                exportData = [
+                    ...preData.map(d => ({...d, type: 'Pre-test'})),
+                    ...postData.map(d => ({...d, type: 'Post-test'}))
+                ];
+            }
+
+            let list = exportData.filter(d => {
+                if (curLesson > 0 && d.lessonId !== curLesson) return false;
+                if (q && !(d.studentId||'').toLowerCase().includes(q) && !(d.studentName||'').toLowerCase().includes(q)) return false;
+                return true;
+            });
+
+            if (list.length === 0) { alert('ไม่มีข้อมูลให้ export'); return; }
+
+            const header = ['รหัสนักศึกษา','ชื่อ-นามสกุล','ประเภท','บทเรียน','ชื่อบทเรียน','คะแนน','คะแนนเต็ม','วันที่ทำ'];
+            const rows = list.map(d => [
+                d.studentId || '',
+                d.studentName || '',
+                d.type || '',
+                d.lessonId || '',
+                d.lessonName || lessons[d.lessonId] || '',
+                d.score || 0,
+                d.total || 5,
+                d.timestamp && d.timestamp.seconds ? new Date(d.timestamp.seconds*1000).toLocaleString('th-TH') : ''
+            ]);
+
+            const bom = '\uFEFF';
+            const csv = bom + [header, ...rows].map(r => r.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const lessonLabel = curLesson === 0 ? 'ทั้งหมด' : 'บทที่' + curLesson;
+            const typeLabel = curType === 'pre' ? 'pretest' : curType === 'post' ? 'posttest' : 'all';
+            a.download = `scores_${typeLabel}_${lessonLabel}_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        window.onload = function() { initTabs(); load(); };
+    </script>
+</body>
+</html>
