@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Scores - Python Fantasy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
+        body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-8 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
+                    <i class="fas fa-poll"></i>
+                </div>
+                <h1 class="text-2xl font-black text-slate-800 uppercase italic">Score Board</h1>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="loadScores()" class="p-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-all">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <a href="pyquest.html" class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all">
+                    กลับสู่บทเรียน
+                </a>
+            </div>
+        </header>
+
+        <!-- Lesson Tabs -->
+        <div style="background:white;border-radius:1.5rem;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);padding:1rem;margin-bottom:1.5rem;border:1px solid #e2e8f0;overflow-x:auto;">
+            <div id="lesson-tabs" style="display:flex;gap:0.5rem;min-width:max-content;">
+            </div>
+        </div>
+
+        <!-- Summary Stats -->
+        <div id="summary-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+                <div class="text-slate-400 text-xs font-bold uppercase">นักเรียนทั้งหมด</div>
+                <div id="stat-total" class="text-2xl font-black text-indigo-600">0</div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+                <div class="text-slate-400 text-xs font-bold uppercase">คะแนนเฉลี่ย</div>
+                <div id="stat-avg" class="text-2xl font-black text-green-600">0</div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+                <div class="text-slate-400 text-xs font-bold uppercase">คะแนนสูงสุด</div>
+                <div id="stat-max" class="text-2xl font-black text-orange-500">0</div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+                <div class="text-slate-400 text-xs font-bold uppercase">ผ่าน (>= 3 ข้อ)</div>
+                <div id="stat-pass" class="text-2xl font-black text-emerald-500">0</div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+            <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h2 id="table-title" class="text-xl font-bold text-slate-700">คะแนนแบบทดสอบก่อนเรียน (Pre-test) - ทั้งหมด</h2>
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="search-input" oninput="filterScores()" class="pl-10 pr-4 py-2 border-2 border-slate-100 rounded-xl focus:ring-4 focus:ring-indigo-100 outline-none text-sm w-full md:w-64" placeholder="ค้นหา...">
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 text-slate-500 text-xs font-black uppercase tracking-widest">
+                        <tr class="border-b border-slate-200">
+                            <th class="px-6 py-4">รหัสนักศึกษา</th>
+                            <th class="px-6 py-4">ชื่อ-นามสกุล</th>
+                            <th class="px-6 py-4 text-center">บทเรียน</th>
+                            <th class="px-6 py-4 text-center">คะแนน</th>
+                            <th class="px-6 py-4 text-right">วันที่ทำ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="score-table" class="divide-y divide-slate-100">
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center text-slate-400 italic">กำลังโหลดข้อมูล...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBkRS0JyVqO8l4scTBAnB93D3B7BeAAE9w",
+            authDomain: "scorestudent-f18c5.firebaseapp.com",
+            databaseURL: "https://scorestudent-f18c5-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "scorestudent-f18c5",
+            storageBucket: "scorestudent-f18c5.firebasestorage.app",
+            messagingSenderId: "55893928684",
+            appId: "1:55893928684:web:fcee9b42d6b8b87df853c9"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const lessonNames = {
+            1: 'แนะนำรายวิชาและพื้นฐาน Python',
+            2: 'ผังงาน (Flowchart)',
+            3: 'การแสดงผลด้วยคำสั่ง print',
+            4: 'ตัวแปรของ Python',
+            5: 'การคำนวณด้วย Operator',
+            6: 'เงื่อนไข Condition If-Else',
+            7: 'Loop For และ While',
+            8: 'ฟังก์ชัน (Function)',
+            9: 'Collection (List, Tuple, Dictionary)',
+            10: 'การสร้าง GUI',
+            11: 'การทดสอบยูนิต (Unit Testing)',
+            12: 'การแก้ไขข้อผิดพลาด (Debugging)'
+        };
+
+        let allScores = [];
+        let currentLesson = 0;
+        let searchQuery = '';
+
+        function initTabs() {
+            const container = document.getElementById('lesson-tabs');
+            let html = '';
+            html += `<button onclick="filterByLesson(0)" style="padding:0.5rem 1rem;border-radius:0.75rem;font-weight:bold;font-size:0.875rem;white-space:nowrap;border:none;cursor:pointer;background:#4f46e5;color:white;" data-lesson="0">ทั้งหมด</button>`;
+            for (let i = 1; i <= 12; i++) {
+                html += `<button onclick="filterByLesson(${i})" style="padding:0.5rem 1rem;border-radius:0.75rem;font-weight:bold;font-size:0.875rem;white-space:nowrap;border:none;cursor:pointer;background:#f1f5f9;color:#475569;" data-lesson="${i}">บทที่ ${i}</button>`;
+            }
+            container.innerHTML = html;
+        }
+
+        async function loadScores() {
+            const tbody = document.getElementById('score-table');
+            tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 italic">กำลังโหลดข้อมูล...</td></tr>';
+            
+            try {
+                const snapshot = await db.collection('artifacts').doc('python-fantasy-v1').collection('public').doc('data').collection('pretests').orderBy('timestamp', 'desc').get();
+                
+                allScores = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    allScores.push(data);
+                });
+
+                applyFilters();
+            } catch (err) {
+                console.error("Error:", err);
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-red-400">ไม่สามารถโหลดข้อมูลได้</td></tr>';
+            }
+        }
+
+        function filterByLesson(lessonId) {
+            currentLesson = lessonId;
+            document.querySelectorAll('#lesson-tabs button').forEach(tab => {
+                const lid = parseInt(tab.dataset.lesson);
+                if (lid === lessonId) {
+                    tab.style.background = '#4f46e5';
+                    tab.style.color = 'white';
+                } else {
+                    tab.style.background = '#f1f5f9';
+                    tab.style.color = '#475569';
+                }
+            });
+            applyFilters();
+        }
+
+        function filterScores() {
+            searchQuery = document.getElementById('search-input').value.toLowerCase();
+            applyFilters();
+        }
+
+        function applyFilters() {
+            let filtered = [...allScores];
+
+            if (currentLesson > 0) {
+                filtered = filtered.filter(s => s.lessonId === currentLesson);
+            }
+
+            if (searchQuery) {
+                filtered = filtered.filter(s => 
+                    (s.studentId && s.studentId.toLowerCase().includes(searchQuery)) || 
+                    (s.studentName && s.studentName.toLowerCase().includes(searchQuery))
+                );
+            }
+
+            updateStats(filtered);
+            renderScores(filtered);
+
+            const title = document.getElementById('table-title');
+            if (currentLesson > 0) {
+                title.textContent = `คะแนนแบบทดสอบก่อนเรียน - บทที่ ${currentLesson}: ${lessonNames[currentLesson]}`;
+            } else {
+                title.textContent = 'คะแนนแบบทดสอบก่อนเรียน (Pre-test) - ทั้งหมด';
+            }
+        }
+
+        function updateStats(scores) {
+            const total = scores.length;
+            document.getElementById('stat-total').textContent = total;
+
+            if (total === 0) {
+                document.getElementById('stat-avg').textContent = '0';
+                document.getElementById('stat-max').textContent = '0';
+                document.getElementById('stat-pass').textContent = '0';
+                return;
+            }
+
+            const totalScore = scores.reduce((sum, s) => sum + (s.score || 0), 0);
+            const avg = (totalScore / total).toFixed(1);
+            const max = Math.max(...scores.map(s => s.score || 0));
+            const pass = scores.filter(s => (s.score || 0) >= 3).length;
+
+            document.getElementById('stat-avg').textContent = avg;
+            document.getElementById('stat-max').textContent = max;
+            document.getElementById('stat-pass').textContent = pass;
+        }
+
+        function renderScores(scores) {
+            const tbody = document.getElementById('score-table');
+            if (scores.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 italic">ยังไม่มีข้อมูลในหมวดนี้</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = scores.map(s => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-6 py-4 font-mono font-bold text-slate-700">${s.studentId || '-'}</td>
+                    <td class="px-6 py-4 font-medium text-slate-600">${s.studentName || 'ไม่ระบุชื่อ'}</td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-lg text-xs font-bold">
+                            บทที่ ${s.lessonId || '-'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-black">${s.score || 0} / ${s.total || 5}</span>
+                    </td>
+                    <td class="px-6 py-4 text-right text-xs text-slate-400">
+                        ${s.timestamp && s.timestamp.seconds ? new Date(s.timestamp.seconds * 1000).toLocaleString('th-TH') : '-'}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        window.onload = function() {
+            initTabs();
+            loadScores();
+        };
+    </script>
+</body>
+</html>

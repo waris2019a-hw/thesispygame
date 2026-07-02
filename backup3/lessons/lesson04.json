@@ -1,0 +1,17 @@
+{
+    "id": 4,
+    "tag": "บทที่ 04",
+    "title": "ตัวแปร (Variables)",
+    "desc": "การจัดเก็บข้อมูลด้วยตัวแปร",
+    "itemName": "ถุงเป้เดินทาง",
+    "itemIcon": "🎒",
+    "docLink": "https://drive.google.com/file/d/1FTn-mKS1Apr4EhSuk9g_P6clIGPSsx3K/view?usp=sharing",
+    "video": "https://www.youtube.com/embed/AWBnk1FE_44",
+    "text": "<p>ตัวแปรคือที่เก็บค่าข้อมูลต่างๆ เช่น ตัวเลข ข้อความ เพื่อนำไปใช้งานภายหลังในโปรแกรม</p>",
+    "initCode": "knight_power = 999\nprint('พลังปัจจุบัน:', knight_power)",
+    "quizzes": [
+        {"q": "x = 10 หมายถึงอะไร?", "options": ["x น้อยกว่า 10", "เก็บค่า 10 ไว้ใน x", "x ลบ 10", "x เท่ากับ 10 ตลอดกาล"], "ans": 1},
+        {"q": "ชื่อตัวแปรห้ามขึ้นต้นด้วยสิ่งใด?", "options": ["ตัวอักษรภาษาอังกฤษ", "ตัวเลข", "Underscore (_)", "ตัวพิมพ์ใหญ่"], "ans": 1},
+        {"q": "ชนิดข้อมูลแบบข้อความเรียกว่าอะไร?", "options": ["Number", "String", "Logic", "Float"], "ans": 1}
+    ]
+}

@@ -1,0 +1,17 @@
+{
+    "id": 8,
+    "tag": "บทที่ 08",
+    "title": "ฟังก์ชัน (Function)",
+    "desc": "การสร้างฟังก์ชันเพื่อรวบรวมชุดคำสั่ง",
+    "itemName": "คัมภีร์ลับ",
+    "itemIcon": "📜",
+    "docLink": "https://drive.google.com/file/d/1b_MswD-FJX1rcAJn8sJhpjYXBMsS2yJK/view?usp=sharing",
+    "video": "https://www.youtube.com/embed/i7s2jjBqW_k",
+    "text": "<p>รวบรวมชุดคำสั่งเข้าด้วยกันเป็นฟังก์ชัน เพื่อเรียกใช้งานได้ซ้ำๆ โดยไม่ต้องเขียนโค้ดซ้ำ</p>",
+    "initCode": "def unleash_strike():\n    print('⚔️ ท่าไม้ตาย: ดาบสายฟ้า!')\n\nunleash_strike()",
+    "quizzes": [
+        {"q": "คำสำคัญใดใช้สร้างฟังก์ชันใน Python?", "options": ["function", "def", "create", "func"], "ans": 1},
+        {"q": "คำสั่งใดใช้ส่งค่ากลับออกจากฟังก์ชัน?", "options": ["send", "give", "return", "output"], "ans": 2},
+        {"q": "พารามิเตอร์ของฟังก์ชันต้องเขียนไว้ในเครื่องหมายใด?", "options": ["( )", "[ ]", "{ }", "< >"], "ans": 0}
+    ]
+}

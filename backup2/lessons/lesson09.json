@@ -1,0 +1,17 @@
+{
+    "id": 9,
+    "tag": "บทที่ 09",
+    "title": "คอลเลกชัน (Collections)",
+    "desc": "การจัดการข้อมูลด้วย List, Tuple และ Dictionary",
+    "itemName": "หีบเก็บไอเทม",
+    "itemIcon": "📦",
+    "docLink": "https://drive.google.com/file/d/1bcwKe06a8-2Wbir6rNhVP-hWK8V9NrRt/view?usp=sharing",
+    "video": "https://www.youtube.com/embed/4k5bz9CfXQY",
+    "text": "<p>จัดการข้อมูลจำนวนมากด้วย List, Tuple และ Dictionary เพื่อให้ทำงานกับชุดข้อมูลได้อย่างมีประสิทธิภาพ</p>",
+    "initCode": "armory = ['ชุดเกราะเหล็ก', 'ดาบเงิน', 'โล่ไม้']\nprint('อาวุธหลัก:', armory[1])",
+    "quizzes": [
+        {"q": "List ใน Python ใช้เครื่องหมายวงเล็บชนิดใด?", "options": ["( )", "[ ]", "{ }", "< >"], "ans": 1},
+        {"q": "Dictionary เก็บข้อมูลในรูปแบบใด?", "options": ["ลำดับตัวเลข", "ข้อมูลเดี่ยว", "คู่ Key และ Value", "สุ่มค่า"], "ans": 2},
+        {"q": "Collection ชนิดใดที่แก้ไขข้อมูลภายในไม่ได้?", "options": ["List", "Tuple", "Dictionary", "Array"], "ans": 1}
+    ]
+}

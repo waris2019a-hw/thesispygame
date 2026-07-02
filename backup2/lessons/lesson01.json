@@ -1,0 +1,17 @@
+{
+    "id": 1,
+    "tag": "บทที่ 01",
+    "title": "แนะนำรายวิชา",
+    "desc": "จุดเริ่มต้นของการเรียนรู้ Python",
+    "itemName": "เข็มทิศทองคำ",
+    "itemIcon": "🧭",
+    "docLink": "https://drive.google.com/file/d/1HsLz-Zs1lUoxEMo0XtMDSTBxIL8Mkx_e/view?usp=sharing",
+    "video": "https://www.youtube.com/embed/_yBHYFGUPXc",
+    "text": "<p>ยินดีต้อนรับสู่ Python Fantasy! ในบทเรียนนี้เราจะทำความรู้จักกับเส้นทางการเรียนเขียนโปรแกรม Python เตรียมตัวให้พร้อมสำหรับการเรียนรู้</p>",
+    "initCode": "print('ข้าพร้อมรับการฝึกฝนแล้ว!')",
+    "quizzes": [
+        {"q": "ภาษาหลักที่เรากำลังศึกษาคือภาษาใด?", "options": ["ภาษา Java", "ภาษา C#", "ภาษา Python", "ภาษา Ruby"], "ans": 2},
+        {"q": "Condition ในทางโปรแกรมมิ่งคืออะไร?", "options": ["การวนซ้ำ", "การตรวจสอบเงื่อนไขเพื่อตัดสินใจ", "การประกาศชื่อตัวแปร", "การวาดรูป"], "ans": 1},
+        {"q": "ใน Python พื้นฐาน Loop มีกี่ประเภทหลัก?", "options": ["1 ประเภท", "2 ประเภท (for, while)", "3 ประเภท", "4 ประเภท"], "ans": 1}
+    ]
+}

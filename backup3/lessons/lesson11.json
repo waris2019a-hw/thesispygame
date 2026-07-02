@@ -1,0 +1,17 @@
+{
+    "id": 11,
+    "tag": "บทที่ 11",
+    "title": "การทดสอบยูนิต (Unit Testing)",
+    "desc": "การตรวจสอบความถูกต้องของโค้ด",
+    "itemName": "แว่นขยายทองคำ",
+    "itemIcon": "🔍",
+    "docLink": "https://docs.google.com/presentation/d/1XVkZQZr_2ISgdTP0fZc2Iz5E2PJUUWae/edit?usp=sharing",
+    "video": "https://www.youtube.com/embed/TKU9HVaoKwk",
+    "text": "<p>เขียน Unit Test เพื่อตรวจสอบว่าฟังก์ชันทำงานได้ถูกต้องตามที่ออกแบบไว้</p>",
+    "initCode": "def test_logic():\n    assert 1 + 1 == 2\n    print('การทดสอบผ่านพ้น!')\n\ntest_logic()",
+    "quizzes": [
+        {"q": "เป้าหมายของการทำ Unit Testing คืออะไร", "options": ["เพิ่มบรรทัดโค้ด", "ตรวจสอบความถูกต้องส่วนย่อย", "รันช้าลง", "ลบทิ้ง"], "ans": 1},
+        {"q": "Assertion ใดใช้เช็คว่าตรงตามคาด?", "options": ["assertEqual", "isTrue", "checkResult", "verify"], "ans": 0},
+        {"q": "หาก Test ผ่านมักแสดงสีอะไร?", "options": ["แดง", "เหลือง", "เขียว", "ขาว"], "ans": 2}
+    ]
+}

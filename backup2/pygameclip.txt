@@ -1,0 +1,42 @@
+pygame clip
+
+บทที่ 1 Overview
+https://www.youtube.com/watch?v=_yBHYFGUPXc
+
+บทที่ 2 Flowchart
+https://www.youtube.com/watch?v=6JJDrcpvjAM
+
+บทที่ 3 คำสั่ง print
+https://www.youtube.com/watch?v=W00CABuXRtI
+
+บทที่ 4 ตัวแปร variable
+https://www.youtube.com/watch?v=AWBnk1FE_44
+
+บทที่ 5 การคำนวน Operator
+https://youtu.be/mpphF5UaG1M
+
+
+บทที่ 6 เงื่อนไข condition
+https://www.youtube.com/watch?v=8QjntFTI2EY
+
+
+บทที่ 7 loop 
+https://www.youtube.com/watch?v=nXUBzYNbTEk
+
+
+บทที่ 8 function
+https://www.youtube.com/watch?v=i7s2jjBqW_k
+
+
+บทที่ 9 Collection list tuple
+https://www.youtube.com/watch?v=4k5bz9CfXQY
+
+บทที่ 10 GUI
+https://youtu.be/G5HS7nufW8o
+
+บทที่ 11 Unit Test
+https://www.youtube.com/watch?v=TKU9HVaoKwk
+
+
+บทที่ 12 debugging
+https://youtu.be/myxGLALWmC8
